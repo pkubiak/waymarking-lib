@@ -13,7 +13,9 @@ describe Waymarking::SearchQuery do
 
         expect(q[0]).to be_an_instance_of(Waymarking::Waymark)
 
-        #pp q[0]
+        expect(q.take(50).size).to eq(50)
+
+        pp q[20]
       }.not_to raise_exception
     end
   end

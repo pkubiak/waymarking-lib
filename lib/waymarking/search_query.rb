@@ -5,6 +5,7 @@ require 'date'
 module Waymarking
   class SearchQuery
     attr_reader :size
+    include Enumerable
 
     def initialize(web, result)
       @web = web
@@ -20,9 +21,10 @@ module Waymarking
     end
 
     # iterate over collection
-    # @return [Enumerator]
     def each()
-
+      (0..size-1).each do |i|
+        yield self[i]
+      end
     end
 
 
@@ -32,10 +34,9 @@ module Waymarking
     # @return [Waymark, nil] Nth waymark or nil if it doesn't exists
     def [](index)
       return nil if index < 0 or index >= @size
-
       unless @cache.has_key? index
-        page = index / self.per_page
-        self.request_nth_page(page)
+        page = index / per_page
+        request_nth_page(page)
       end
 
       @cache[index]
@@ -47,8 +48,11 @@ module Waymarking
     # @param index [Integer] page index
     # @return nil
     def request_nth_page(index)
-      params = URI::decode_www_form(@uri.query)
-      params['p'] = (index+1).to_i
+      params = Hash[URI::decode_www_form(@uri.query)]
+
+      params['f'] = '1'
+      params['p'] = (index.to_i+1).to_s
+
       uri = @uri.clone
       uri.query = URI::encode_www_form(params)
 
@@ -77,8 +81,7 @@ module Waymarking
           end
         end
       }
-
-      doc.css('tr.wmd_alt').each_with_index do |item, i|
+      doc.css('.wmd_alt, .wmd_reg').each_with_index do |item, i|
         params = {
           state: :mini,
           category: item.at_css('.wmd_cat a').text,
@@ -141,7 +144,8 @@ module Waymarking
         wm = Waymarking::Waymark.new(params)
 
         # store waymark
-        @cache[per_page * page_no + i] = wm
+        pos = per_page * page_no + i
+        @cache[pos] = wm
       end
     end
 
