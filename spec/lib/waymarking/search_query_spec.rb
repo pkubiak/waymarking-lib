@@ -13,7 +13,7 @@ describe Waymarking::SearchQuery do
 
         expect(q[0]).to be_an_instance_of(Waymarking::Waymark)
 
-        pp q[0]
+        #pp q[0]
       }.not_to raise_exception
     end
   end
