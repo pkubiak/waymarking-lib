@@ -5,7 +5,7 @@ describe Waymarking::Utils do
     it 'generates KML' do
       w = give_instance_with_correct_credentials()
       q = w.search(near: 'Kraków')
-      kml = Waymarking::Utils.to_kml(q, 10).to_xml
+      kml = Waymarking::Utils.to_kml(q, 20).to_xml
       puts kml
     end
   end
