@@ -71,5 +71,46 @@ module Waymarking
     def profile(username = nil, uid = nil)
 
     end
+
+    # Load information about categories
+    def categories()
+      @web.get('http://www.waymarking.com/cat/categorydirectory.aspx') do |page|
+        ile = 0
+        #puts page.parser.to_html.to_s
+        cache = {}
+
+        page.parser.css('div#content div.gutter a').each do |cat|
+          href = cat.attr('href')
+          m = Category::GUID_REGEXP.match href
+          key = Waymarking::Utils.parameterize(cat.text)
+          unless m.nil? then
+            ile +=1
+            raise DuplicatedCategory if cache.has_key? key
+
+            cache[key] = m[1]
+            #puts "#{ile} #{key} #{cat.text} #{m[1]}"
+          else
+            puts href
+          end
+
+        end
+
+        cache2 = {}
+        cache.keys.each do |key|
+          @web.get("http://www.waymarking.com/cat/details.aspx?f=1&guid=#{cache[key]}&exp=True") do |page2|
+            begin
+              cat = Waymarking::Category.from_html(page2)
+              cache2[key] = cat
+            rescue
+              puts key
+            end
+          end
+        end
+
+        File.open('categories.yml', 'w') do |f|
+          f.write YAML::dump(cache2)
+        end
+      end
+    end
   end
 end
